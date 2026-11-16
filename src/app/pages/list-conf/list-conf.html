@@ -1,0 +1,240 @@
+<!-- Hero Banner Section -->
+<section class="hero-section text-white py-5 mb-5 position-relative overflow-hidden">
+  <div class="container py-4 position-relative z-1">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold mb-3">
+          <i class="bi bi-calendar-event me-2"></i>Programme Officiel 2026
+        </span>
+        <h1 class="display-4 fw-bold mb-3 tracking-tight">
+          Catalogue des <span class="text-gradient">Conférences</span> & Événements Tech
+        </h1>
+        <p class="lead text-light-50 mb-4 opacity-75">
+          Explorez les conférences technologiques les plus prestigieuses, réservez vos places en temps réel et connectez-vous avec les leaders du secteur.
+        </p>
+      </div>
+
+      <!-- Quick Stats Card -->
+      <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="glass-card p-4 rounded-4 shadow-lg text-white">
+          <h5 class="fw-bold mb-3 border-bottom pb-2 border-white-subtle">
+            <i class="bi bi-graph-up-arrow me-2 text-info"></i>En Bref
+          </h5>
+          <div class="d-flex justify-content-between align-items-center py-2">
+            <span class="text-white-50"><i class="bi bi-easel me-2"></i>Conférences :</span>
+            <span class="badge bg-info text-dark fs-6 rounded-pill px-3">{{ conferences.length }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-2">
+            <span class="text-white-50"><i class="bi bi-ticket-perforated me-2"></i>Places Disponibles :</span>
+            <span class="badge bg-success fs-6 rounded-pill px-3">{{ totalAvailablePlaces }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-2">
+            <span class="text-white-50"><i class="bi bi-geo-alt me-2"></i>Villes Actives :</span>
+            <span class="badge bg-light text-dark fs-6 rounded-pill px-3">Tunis, Ariana, Sousse, Sfax</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Container -->
+<div class="container mb-5">
+
+  <!-- Feedback Alert (Toast-like) -->
+  @if (reservationMessage) {
+    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 d-flex align-items-center mb-4 rounded-3" role="alert">
+      <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+      <div>
+        <strong>Réservation confirmée !</strong> {{ reservationMessage }}
+      </div>
+      <button type="button" class="btn-close ms-auto" (click)="reservationMessage = null" aria-label="Close"></button>
+    </div>
+  }
+
+  <!-- Filters & Search Toolbar -->
+  <div class="card border-0 shadow-sm p-3 mb-4 rounded-4 filter-bar">
+    <div class="row g-3 align-items-center">
+      <!-- Search Input -->
+      <div class="col-lg-5 col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-0 ps-3">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control bg-light border-0 py-2"
+            placeholder="Rechercher par titre, ville ou adresse..."
+            [(ngModel)]="searchTerm"
+          />
+          @if (searchTerm) {
+            <button class="btn btn-light border-0 text-muted" (click)="searchTerm = ''">
+              <i class="bi bi-x-circle"></i>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Sort Selection -->
+      <div class="col-lg-3 col-md-6">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-0">
+            <i class="bi bi-arrow-down-up text-muted"></i>
+          </span>
+          <select class="form-select bg-light border-0 py-2" [(ngModel)]="sortBy">
+            <option value="date">Trier par : Date (Chronologique)</option>
+            <option value="places-desc">Trier par : Places (Plus au moins)</option>
+            <option value="places-asc">Trier par : Places (Moins au plus)</option>
+            <option value="title">Trier par : Titre (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Categories Pills -->
+      <div class="col-lg-4 col-md-12 d-flex flex-wrap gap-1 justify-content-lg-end">
+        @for (cat of categories; track cat) {
+          <button
+            type="button"
+            class="btn btn-sm rounded-pill px-3"
+            [class.btn-primary]="selectedCategory === cat"
+            [class.btn-outline-secondary]="selectedCategory !== cat"
+            (click)="setCategory(cat)"
+          >
+            {{ cat === 'all' ? 'Toutes' : cat }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Conferences Counter / Info Bar -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0 fw-medium">
+      Affichage de <span class="text-dark fw-bold">{{ filteredConferences.length }}</span> conférence(s) disponible(s)
+    </p>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="row g-4">
+    @for (conf of filteredConferences; track conf.id) {
+      <div class="col-12 col-md-6 col-lg-4 d-flex">
+        <div class="card conference-card border-0 shadow-sm rounded-4 w-100 d-flex flex-column overflow-hidden">
+          
+          <!-- Image Section with Overlay Badges -->
+          <div class="card-img-container position-relative">
+            <img [src]="conf.picture" [alt]="conf.title" class="card-img-top conference-img" />
+            
+            <!-- Category Badge -->
+            <span class="badge bg-dark bg-opacity-75 backdrop-blur position-absolute top-0 start-0 m-3 rounded-pill px-3 py-2 text-white">
+              <i class="bi bi-tag-fill me-1 text-primary"></i>{{ conf.category || 'Conférence' }}
+            </span>
+
+            <!-- Availability Badge -->
+            <span
+              class="badge position-absolute top-0 end-0 m-3 rounded-pill px-3 py-2 shadow-sm"
+              [class.bg-success]="conf.availablePlaces > 15"
+              [class.bg-warning]="conf.availablePlaces > 0 && conf.availablePlaces <= 15"
+              [class.text-dark]="conf.availablePlaces > 0 && conf.availablePlaces <= 15"
+              [class.bg-danger]="conf.availablePlaces === 0"
+            >
+              @if (conf.availablePlaces > 15) {
+                <i class="bi bi-check-circle me-1"></i>{{ conf['available-Places'] }} places
+              } @else if (conf.availablePlaces > 0) {
+                <i class="bi bi-exclamation-triangle me-1"></i>Plus que {{ conf['available-Places'] }} !
+              } @else {
+                <i class="bi bi-x-circle me-1"></i>Complet
+              }
+            </span>
+          </div>
+
+          <!-- Card Body -->
+          <div class="card-body p-4 d-flex flex-column flex-grow-1">
+            <!-- Title -->
+            <h5 class="card-title fw-bold text-dark mb-3 line-clamp-2" [title]="conf.title">
+              {{ conf.title }}
+            </h5>
+
+            <!-- Description -->
+            <p class="card-text text-muted small mb-4 flex-grow-1">
+              {{ conf.description }}
+            </p>
+
+            <!-- Metadata List -->
+            <div class="metadata-group bg-light rounded-3 p-3 mb-3">
+              <!-- Date -->
+              <div class="d-flex align-items-center mb-2 text-secondary">
+                <i class="bi bi-calendar3 text-primary fs-5 me-3"></i>
+                <div>
+                  <small class="d-block text-muted text-uppercase fw-semibold" style="font-size: 0.72rem;">Date de l'événement</small>
+                  <span class="fw-semibold text-dark">{{ conf.date | date:'fullDate' }}</span>
+                </div>
+              </div>
+
+              <!-- Address (adrees) -->
+              <div class="d-flex align-items-center text-secondary">
+                <i class="bi bi-geo-alt-fill text-danger fs-5 me-3"></i>
+                <div>
+                  <small class="d-block text-muted text-uppercase fw-semibold" style="font-size: 0.72rem;">Adresse / Lieu</small>
+                  <span class="fw-semibold text-dark">{{ conf.adrees }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Places progress info -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Places restantes</span>
+                <span class="fw-bold" [class.text-danger]="conf.availablePlaces === 0" [class.text-success]="conf.availablePlaces > 0">
+                  {{ conf['available-Places'] }} places disponibles
+                </span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div
+                  class="progress-bar"
+                  role="progressbar"
+                  [style.width.%]="(conf.availablePlaces / 60) * 100"
+                  [class.bg-success]="conf.availablePlaces > 15"
+                  [class.bg-warning]="conf.availablePlaces > 0 && conf.availablePlaces <= 15"
+                  [class.bg-danger]="conf.availablePlaces === 0"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Card Footer / Action Button -->
+            <div class="pt-2 mt-auto">
+              <button
+                type="button"
+                class="btn w-100 py-2 fw-semibold rounded-pill d-flex align-items-center justify-content-center gap-2 transition"
+                [class.btn-primary]="conf.availablePlaces > 0"
+                [class.btn-secondary]="conf.availablePlaces === 0"
+                [disabled]="conf.availablePlaces === 0"
+                (click)="reservePlace(conf)"
+              >
+                @if (conf.availablePlaces > 0) {
+                  <i class="bi bi-ticket-detailed-fill"></i>
+                  <span>Réserver une place</span>
+                } @else {
+                  <i class="bi bi-slash-circle"></i>
+                  <span>Complet (Guichet fermé)</span>
+                }
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    } @empty {
+      <div class="col-12 py-5 text-center">
+        <div class="p-5 bg-light rounded-4 shadow-sm">
+          <i class="bi bi-search text-muted display-3 mb-3 d-block"></i>
+          <h4 class="fw-bold text-dark">Aucune conférence trouvée</h4>
+          <p class="text-muted">Essayez de modifier votre mot-clé de recherche ou réinitialisez les filtres.</p>
+          <button class="btn btn-outline-primary rounded-pill px-4" (click)="searchTerm = ''; selectedCategory = 'all'">
+            <i class="bi bi-arrow-clockwise me-2"></i>Réinitialiser les filtres
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>
